@@ -43,3 +43,13 @@ Environment prompt: final transparent 4x4 prop atlas, premium stylized 3D pre-re
 HUD prompt: final transparent 4x2 premium RPG utility icon atlas, coherent with the champion/weapon art, centered and readable at 40px, clean dark contour, no text or background. Row-major subjects: bronze-rimmed orange champion portrait; steel chained butcher hook; three blue gems; horned ivory skull; green-awning shop; orange leather backpack/gold buckle; green regeneration heart/plus; purple soul-orb stone ring.
 
 Environment layout correction: a second built-in ImageGen edit preserved the sixteen prop identities but repacked them into a square 4x4 sheet, with each object occupying at most 60% of its cell and at least 20% transparent margins. This removed overlapping crop rectangles and detached neighboring fragments. The initial tightly packed output is retained only in local ignored backups. The final original output PNG is measured without repainting or pixel edits; the non-overlap invariant is tested.
+
+## Champion and arsenal action revision (v1.4.0)
+
+Built-in ImageGen edited champion-v3 into champion-v5: preserve the 8-direction x 4-pose layout, orange hunched butcher, horned cap, green pants, red stitched back and steel rings; simplify broad angular muscle/color planes and remove texture noise. Original output retained unchanged.
+
+Built-in ImageGen generated champion-attack-v5 from champion-v5: transparent 8x4 companion atlas. Columns down/down-left/left/up-left/up/up-right/right/down-right. Rows windup with forearms raised and knees braced, outward release, low follow-through and recovery. Preserve the same identity, ground alignment, color/materials, no weapons, chains or text. This separate sheet is selected during real combat strikes, then returns to locomotion.
+
+Built-in ImageGen edited weapons-v3 into weapons-v5: transparent 3x2 atlas, broad iron cleaver, purple serrated crescent with red wrap, emerald star, pale stone hatchet, orange flame axe and midnight-blue frost crescent. Clean broad geometric bevel planes instead of noisy cracked textures; full silhouettes, upright handles, no text. Measured actual bottom-pommel alpha positions are stored in anchors-v5.json; no PNG pixels were altered.
+
+Rendering uses one discrete directional view at a time to avoid translucent double silhouettes. Six weapon paths use different radii, lift and bounded phase variation while preserving readable angular spacing. Weapon blade vectors point radially outward. Chains attach to measured pommels; weapon shadows and colored motion ribbons remain live.

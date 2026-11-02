@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   const C=HeroCore,$=id=>document.getElementById(id),paintedIndex={axe:0,blade:1,bow:2,hammer:3,staff:4,crossbow:5},uiIndex={portrait:0,helmet:0,hook:1,gem:2,skull:3,shop:4,bag:5,heart:6,tree:7,flame:7};
-  document.documentElement.style.setProperty('--weapon-atlas',"url('assets/art/weapons-v3.png')");
+  document.documentElement.style.setProperty('--weapon-atlas',"url('assets/art/weapons-v5.png')");
   const icon=(id,cls='')=>uiIndex[id]!==undefined?`<span class="painted-ui ${cls}" aria-hidden="true" style="background-position:${(uiIndex[id]%4)*100/3}% ${Math.floor(uiIndex[id]/4)*100}%"></span>`:paintedIndex[id]!==undefined?`<span class="painted-item ${cls}" aria-hidden="true" style="background-position:${(paintedIndex[id]%3)*50}% ${Math.floor(paintedIndex[id]/3)*100}%"></span>`:`<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
   document.querySelector('.profile-open').innerHTML=icon('portrait');
   const SAVE_KEY='idle-hero-dungeon-v1';let state;try{state=C.restoreState(localStorage.getItem(SAVE_KEY));}catch{state=C.createState();}

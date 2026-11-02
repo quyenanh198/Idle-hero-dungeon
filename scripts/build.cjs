@@ -8,7 +8,7 @@ const output = path.join(root, 'dist');
 const { version } = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const files = [
   'index.html', 'styles.css', 'core.js', 'world.js', 'game.js',
-  'assets/art/weapons-v3.png', 'motion.js', 'characters.js', 'art-assets.js', 'sprite-motion.js', 'art-renderer.js', 'environment.js', 'assets/art/ui-v4.png', 'reference.css', 'server.cjs', 'Play.cmd', 'vendor/three.min.js', 'vendor/THREE-LICENSE.txt', 'vendor/lilita-one.ttf', 'vendor/LILITA-LICENSE.txt'
+  'assets/art/weapons-v5.png', 'motion.js', 'characters.js', 'art-assets.js', 'sprite-motion.js', 'art-renderer.js', 'environment.js', 'assets/art/ui-v4.png', 'reference.css', 'server.cjs', 'Play.cmd', 'vendor/three.min.js', 'vendor/THREE-LICENSE.txt', 'vendor/lilita-one.ttf', 'vendor/LILITA-LICENSE.txt'
 ];
 
 for (const file of ['core.js', 'world.js', 'game.js', 'motion.js', 'characters.js', 'sprite-motion.js', 'art-renderer.js', 'environment.js', 'server.cjs']) {
