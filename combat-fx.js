@@ -40,7 +40,7 @@
    mesh.instanceMatrix.needsUpdate=true;
    for(const r of rings){r.life=Math.max(0,r.life-dt);r.mesh.visible=r.life>0;r.mesh.scale.setScalar(r.radius*(1+(1-r.life/.32)*.6));r.mesh.material.opacity=r.life/.32*.5;}
    for(const e of enemies){
-    const m=markerFor(e.id),s=e.combat;m.group.visible=!!e.alive&&s?.state==='windup';
+    const m=markerFor(e.id),s=e.combat;m.group.visible=!!e.alive&&!e.captured&&s?.state==='windup';
     if(!m.group.visible)continue;
     const tint=s.enraged?'#ec56fa':e.boss?'#ff664f':'#ffc44f';
     m.group.position.set(s.targetX,heightAt(s.targetX,s.targetZ)+.07,s.targetZ);m.outline.scale.setScalar(s.radius);m.fill.scale.setScalar(s.radius*Math.max(.02,1-s.timer/s.windup));m.outline.material.color.set(tint);m.fill.material.color.set(tint);

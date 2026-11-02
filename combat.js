@@ -13,14 +13,14 @@
  function create(seed=173){return {seed:seed>>>0,time:0,remainder:0,cooldowns:{},down:false};}
  function random(sim){sim.seed=(Math.imul(sim.seed,1664525)+1013904223)>>>0;return sim.seed/4294967296;}
  function state(e){return e.combat||(e.combat={state:'approach',timer:0,windup:0,radius:1.2,targetX:e.x,targetZ:e.z,attacks:0,enraged:false,statuses:{}});}
- function resetEnemy(e,x=e.x,z=e.z){e.x=x;e.z=z;e.hp=e.max;e.alive=true;delete e.combat;state(e);}
+ function resetEnemy(e,x=e.x,z=e.z){e.x=x;e.z=z;e.hp=e.max;e.alive=true;e.captured=false;e.captureScale=1;delete e.combat;state(e);}
  const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
  function step(sim,elapsed,hero,enemies,weapons){
   const events=[];
   if(!(elapsed>0)||sim.down)return events;
   sim.remainder+=Math.min(elapsed,.25);
   function damage(e,value,weapon,critical=false,dot=false){
-   if(!e.alive||!(value>0))return;
+   if(!e.alive||e.captured||!(value>0))return;
    const vulnerability=state(e).statuses.fracture?.remaining>0?1.15:1;
    const amount=Math.max(1,Math.round(value*vulnerability));e.hp=Math.max(0,e.hp-amount);
    events.push({type:'damage',id:e.id,weapon,amount,critical,dot,x:e.x,z:e.z});
@@ -39,7 +39,7 @@
   while(sim.remainder+1e-9>=DT&&!sim.down){
    sim.remainder=Math.max(0,sim.remainder-DT);sim.time+=DT;
    for(const e of enemies){
-    if(!e.alive)continue;
+    if(!e.alive||e.captured)continue;
     const s=state(e);
     for(const [name,v] of Object.entries(s.statuses)){
      if(v.layers){
@@ -59,7 +59,7 @@
     const p=PROFILES[weapon.id];if(!p||!(weapon.dps>0))continue;
     sim.cooldowns[weapon.id]=Math.max(0,(sim.cooldowns[weapon.id]||0)-DT);
     if(sim.cooldowns[weapon.id]>1e-9)continue;
-    const targets=enemies.filter(e=>e.alive&&distance(hero,e)<=hero.range).sort((a,b)=>distance(hero,a)-distance(hero,b)||a.id-b.id);
+    const targets=enemies.filter(e=>e.alive&&!e.captured&&distance(hero,e)<=hero.range).sort((a,b)=>distance(hero,a)-distance(hero,b)||a.id-b.id);
     if(!targets.length)continue;
     sim.cooldowns[weapon.id]=p.cooldown;
     events.push({type:'weapon',weapon:weapon.id,effect:p.effect,x:targets[0].x,z:targets[0].z});
@@ -76,7 +76,7 @@
     });
    }
    for(const e of enemies){
-    if(!e.alive)continue;
+    if(!e.alive||e.captured)continue;
     const s=state(e),d=distance(hero,e);s.enraged=!!e.boss&&e.hp<=e.max*.4;
     if(s.statuses.stun)continue;
     if(s.state==='approach'){
