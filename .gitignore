@@ -1,0 +1,17 @@
+node_modules/
+qa/test-save.json
+*.log
+dist/
+Idle hero dungeon-local.zip
+backups/
+docs/reference/
+qa/*.png
+qa/*.jpg
+qa/*.webm
+qa/*.mp4
+qa/recording/
+qa/compare.html
+.worktrees/
+test-results/
+playwright-report/
+server.log

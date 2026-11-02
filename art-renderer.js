@@ -1,0 +1,34 @@
+/* Pre-rendered character art with live 3D chains, shadows and combat motion. */
+(function(){
+  'use strict';
+  const T=THREE,S=SpriteMotion,shared={};
+  function texture(name){if(shared[name])return shared[name];const spec=HeroArt[name],map=new T.Texture();map.colorSpace=T.SRGBColorSpace;map.magFilter=T.LinearFilter;map.minFilter=T.LinearFilter;map.generateMipmaps=false;const image=new Image();map.image=image;image.onload=()=>{map.needsUpdate=true;map.userData.ready=true;};image.src=spec.data;shared[name]=map;return map;}
+  function atlas(name,column,row){const spec=HeroArt[name],map=texture(name).clone();map.image=texture(name).image;const rect=S.uv(column,row,spec.columns,spec.rows);map.repeat.set(rect.w,rect.h);map.offset.set(rect.x,rect.y);map.colorSpace=T.SRGBColorSpace;map.minFilter=map.magFilter=T.LinearFilter;map.generateMipmaps=false;map.needsUpdate=true;return map;}
+  function softShadow(parent,width,depth,opacity=.3){
+    if(!shared.shadow){const canvas=document.createElement('canvas');canvas.width=canvas.height=64;const c=canvas.getContext('2d'),g=c.createRadialGradient(32,32,4,32,32,31);g.addColorStop(0,'rgba(10,21,23,.75)');g.addColorStop(.5,'rgba(10,21,23,.4)');g.addColorStop(1,'rgba(10,21,23,0)');c.fillStyle=g;c.fillRect(0,0,64,64);shared.shadow=new T.CanvasTexture(canvas);}
+    const m=new T.Mesh(new T.PlaneGeometry(width,depth),new T.MeshBasicMaterial({map:shared.shadow,transparent:true,opacity,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));m.rotation.x=-Math.PI/2;m.position.y=.025;parent.add(m);return m;
+  }
+  window.HeroSprites={
+    ready(){return Promise.all(['champion','weapons','enemies'].map(name=>{const map=texture(name);return map.image.decode().then(()=>{map.needsUpdate=true;map.userData.ready=true;});}));},
+    champion(parent){
+      const map=atlas('champion',0,0),mat=new T.SpriteMaterial({map,transparent:true,alphaTest:.06,depthWrite:true,depthTest:true,toneMapped:false});const sprite=new T.Sprite(mat);sprite.name='painted-champion';sprite.renderOrder=3;sprite.center.set(.5,.06);sprite.position.y=.08;const spec=HeroArt.champion,aspect=(spec.width/spec.columns)/(spec.height/spec.rows);sprite.scale.set(5.1*aspect,5.1,1);parent.add(sprite);const shadow=softShadow(parent,3.65,2.55,.68);const blendUniforms={uFaceBlend:{value:0},uFrameDelta:{value:new T.Vector2()}};mat.onBeforeCompile=shader=>{Object.assign(shader.uniforms,blendUniforms);shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform float uFaceBlend;\nuniform vec2 uFrameDelta;').replace('#include <map_fragment>','#ifdef USE_MAP\nvec4 a=texture2D(map,vMapUv);vec4 b=texture2D(map,vMapUv+uFrameDelta);diffuseColor*=mix(a,b,uFaceBlend);\n#endif');};mat.customProgramCacheKey=()=> 'champion-direction-blend-v3';let column=-1,row=-1,lastFrame=-1;
+      function update(time,moving,facing,combat,kick=0){
+        const ready=texture('champion').userData.ready;if(ready&&lastFrame<0){map.needsUpdate=true;lastFrame=0;}sprite.visible=!!ready;shadow.visible=!!ready;
+        const direction=((-facing/(Math.PI/4))%8+8)%8,nextColumn=Math.floor(direction),nextRow=S.walkRow(time,moving);const mix=direction-nextColumn;blendUniforms.uFaceBlend.value=mix*mix*(3-2*mix);blendUniforms.uFrameDelta.value.set(((nextColumn+1)%8-nextColumn)/8,0);if(nextColumn!==column||nextRow!==row){column=nextColumn;row=nextRow;const rect=S.uv(column,row,spec.columns,spec.rows);map.offset.set(rect.x,rect.y);}
+        const bob=moving?Math.abs(Math.sin(time*10.5))*.035:Math.sin(time*2.7)*.025;sprite.position.y=.08+bob+kick*.025;sprite.material.rotation=(moving?Math.sin(time*10.5)*.012:Math.sin(time*1.9)*.006)+Math.sin(facing)*kick*.025;sprite.material.color.setScalar(1+kick*.12);sprite.scale.set(5.1*aspect*(1+kick*.025),5.1*(1-kick*.035),1);shadow.scale.set(1-bob*.7,1-bob*.7,1);
+        return !!ready;
+      }
+      return {sprite,shadow,update};
+    },
+    weapon(id,parent,shadowParent){
+      const index={axe:0,blade:1,bow:2,hammer:3,staff:4,crossbow:5}[id];const map=atlas('weapons',index%3,Math.floor(index/3));const mat=new T.SpriteMaterial({map,transparent:true,alphaTest:.07,depthWrite:true,depthTest:true,toneMapped:false});const sprite=new T.Sprite(mat);sprite.center.set(...HeroArt.weapons.anchors[index]);sprite.scale.set(2.55,2.55,1);sprite.name='painted-weapon-'+id;parent.add(sprite);let ready=false;
+      const anchor=HeroArt.weapons.anchors[index],geometry=new T.PlaneGeometry(2.55,2.55);geometry.translate((.5-anchor[0])*2.55,(.5-anchor[1])*2.55,0);const shadow=new T.Mesh(geometry,new T.MeshBasicMaterial({map,color:'#182b26',transparent:true,opacity:.2,alphaTest:.04,depthWrite:false}));shadowParent.add(shadow);
+      return {sprite,update(phase,time){if(!ready&&texture('weapons').userData.ready){ready=true;map.needsUpdate=true;}sprite.visible=shadow.visible=ready;mat.rotation=-phase+.35+Math.sin(time*1.9+index)*.12;shadow.position.set(parent.position.x+parent.position.y*.22,.035,parent.position.z-parent.position.y*.2);shadow.rotation.set(-Math.PI/2,0,mat.rotation);return ready;},dispose(){shadowParent.remove(shadow);geometry.dispose();shadow.material.dispose();map.dispose();mat.dispose();}};
+    },
+    creature(parent,kind,boss){
+      const species=boss?2:kind===2?1:0,map=atlas('enemies',0,species),mat=new T.SpriteMaterial({map,transparent:true,alphaTest:.09,depthWrite:true,toneMapped:false}),sprite=new T.Sprite(mat);sprite.name='painted-enemy-'+species;sprite.center.set(.5,.07);const size=boss?3.7:kind===2?2.6:2.1;sprite.scale.set(size,size,1);sprite.position.y=.06;parent.add(sprite);const shadow=softShadow(parent,boss?3.6:1.45,boss?2.3:1.1,boss?.55:.4);let ready=false;
+      function update(time,moving,facing,hurt,dying,attacking=false){if(!ready&&texture('enemies').userData.ready){ready=true;map.needsUpdate=true;}sprite.visible=shadow.visible=ready;const col=attacking&&Math.sin(time*5)>.35?3:moving?[1,0,2,0][Math.floor(time*7)%4]:0;const rect=S.uv(col,species,4,3);const left=Math.sin(facing)<0;map.repeat.set(left?rect.w:-rect.w,rect.h);map.offset.set(left?rect.x:rect.x+rect.w,rect.y);sprite.position.y=.06+(moving?Math.abs(Math.sin(time*11))*.025:Math.sin(time*2.3)*.012);sprite.position.x=hurt>0?Math.sin(hurt*45)*.07:0;mat.rotation=hurt>0?Math.sin(hurt*45)*.08:0;mat.color.setRGB(1+Math.max(0,hurt)*4,1+Math.max(0,hurt)*4,1+Math.max(0,hurt)*4);return ready;}
+      return {sprite,update};
+    }
+  };
+})();
