@@ -59,3 +59,7 @@ test('zero elapsed time cannot advance attacks or statuses and defeat is emitted
  assert.deepEqual(C.step(s,0,h,[e],[]),[]);assert.equal(JSON.stringify(s),before);
  h.hp=1;const events=run(s,h,[e],[],4);assert.equal(events.filter(v=>v.type==='defeat').length,1);assert.equal(h.hp,0);
 });
+test('captured targets neither take weapon damage nor attack while being reeled in',()=>{
+ const s=C.create(),h=hero(),e=enemy(1,1);e.captured=true;
+ assert.deepEqual(run(s,h,[e],[{id:'axe',dps:200}],2),[]);assert.equal(e.hp,500);assert.equal(h.hp,400);
+});

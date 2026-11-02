@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
     const page=await browser.newPage({viewport:{width:1000,height:760}}),errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     await page.route('**/world-render-harness',route=>route.fulfill({contentType:'text/html',body:
-      '<!doctype html><meta charset="utf-8">'+['vendor/three.min.js','motion.js','art-assets.js','sprite-motion.js','environment.js','art-renderer.js','characters.js','combat.js','combat-fx.js','world.js'].map(file=>`<script src="/${file}"></script>`).join('')}));
+      '<!doctype html><meta charset="utf-8">'+['vendor/three.min.js','motion.js','art-assets.js','sprite-motion.js','environment.js','art-renderer.js','characters.js','hook.js','movement.js','combat.js','combat-fx.js','world.js'].map(file=>`<script src="/${file}"></script>`).join('')}));
     await page.goto('http://localhost:4177/world-render-harness');
     await page.evaluate(async()=>{
       await HeroSprites.ready();

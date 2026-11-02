@@ -4,6 +4,17 @@
   const T=THREE,M=HeroMotion;
   const metal=new T.MeshStandardMaterial({color:'#a4b0bd',roughness:.5,metalness:.5,flatShading:true,depthWrite:false});
   window.HeroModels={
+    hook(){
+      const root=new T.Group(),head=new T.Group(),shadowRoot=new T.Group();root.add(head,shadowRoot);
+      const painted=HeroSprites.weapon('blade',head,shadowRoot),geometry=new T.TorusGeometry(.09,.025,4,8),links=new T.InstancedMesh(geometry,metal,24),dummy=new T.Object3D(),up=new T.Vector3(0,1,0);root.add(links);links.frustumCulled=false;root.visible=false;
+      function update(state,hero,time){
+        root.visible=state.phase!=='idle';if(!root.visible)return;
+        const start={x:hero.x,y:hero.y+3,z:hero.z},end={x:state.tip.x,y:hero.y+1.5,z:state.tip.z};head.position.set(end.x,end.y,end.z);
+        painted.update(0,time,Math.atan2(-(end.x-start.x),end.z-start.z));painted.sprite.renderOrder=end.z>hero.z?4:2;
+        for(let i=0;i<24;i++){const t=i/23,p=M.chainPoint(start,end,t,.2),q=M.chainPoint(start,end,Math.min(1,t+.01),.2);const direction=new T.Vector3(q.x-p.x,q.y-p.y,q.z-p.z);if(direction.lengthSq()<1e-8)direction.set(0,1,0);dummy.position.set(p.x,p.y,p.z);dummy.quaternion.setFromUnitVectors(up,direction.normalize());dummy.rotateY(i%2?Math.PI/2:0);dummy.scale.set(1,1.4,1);dummy.updateMatrix();links.setMatrixAt(i,dummy.matrix);}links.instanceMatrix.needsUpdate=true;
+      }
+      return {root,update};
+    },
     champion(){
       const root=new T.Group(),body=new T.Object3D();root.name='rendered-orange-champion';
       const paintedChampion=HeroSprites.champion(root);const chains=new T.Group();root.add(chains);let active=[],attackKick=0,attackAge=1,swingClock=0;const dummy=new T.Object3D(),chainGeo=new T.TorusGeometry(.102,.028,4,8),up=new T.Vector3(0,1,0);

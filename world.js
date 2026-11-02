@@ -44,6 +44,8 @@
     environment.add('totem',-8,-15,.9);environment.add('stump',-10,6,.85);
     const campData=[{x:-5,z:1,name:'Slime meadow',kind:0},{x:6,z:0,name:'Goblin grove',kind:1},{x:-8,z:-18,name:'Frost hollow',kind:2},{x:14,z:-15,name:'Boss dungeon',kind:3}];
     const camps=campData.map((c,i)=>{const ring=mesh(new T.TorusGeometry(1.4,.14,6,32),'#6dff9c',c.x,.3,c.z);ring.rotation.x=-Math.PI/2;const outer=mesh(new T.RingGeometry(1.65,1.78,32),'#d0ffba',c.x,.23,c.z);outer.rotation.x=-Math.PI/2;outer.castShadow=false;ring.visible=false;outer.visible=false;return {...c,ring,index:i};});
+    let colliders=environment.getColliders(),claimedNodes=new Set();const notifiedCamps=new Set();const resourceNodes=[{id:'wood',kind:'stump',x:-10,z:6,label:'Harvest timber'},{id:'crystals',kind:'crystals',x:-14,z:-22,label:'Gather crystals'},{id:'treasure',kind:'chest',x:9,z:6,label:'Open treasure'}];
+    const hookState=HeroHook.create(),hookModel=HeroModels.hook();scene.add(hookModel.root);
     const heroModel=HeroModels.champion(),hero=heroModel.root,body=heroModel.body;scene.add(hero);hero.position.set(0,.05,3);let facing=Math.PI;
     function weapons(ids){heroModel.setWeapons(ids);invalidate();}
     const enemies=[],floats=[],loot=[];let combat=HeroCombat.create();const combatFx=CombatFX.create(scene,(x,z)=>z<snowEdge(x)?.59:.05);
@@ -52,7 +54,7 @@
     const tmpV=new T.Vector3();function project(x,y,z){tmpV.set(x,y,z).project(camera);return {x:(tmpV.x*.5+.5)*canvas.clientWidth,y:(-tmpV.y*.5+.5)*canvas.clientHeight,visible:tmpV.z<1&&Math.abs(tmpV.x)<1.1&&Math.abs(tmpV.y)<1.1};}
     function pop(text,x,y,z,color='#fff9b0'){floats.push({text,x,y,z,color,life:1.3,max:1.3});}
     function particles(x,z,color,n=8){combatFx.burst(x,z,color,n);}
-    function collect(e){const gold=cb.kill(e.boss,e.camp.kind);pop('+'+gold+' \u25c6',e.g.position.x,2.2,e.g.position.z,'#ffe46b');particles(e.g.position.x,e.g.position.z,e.boss?'#ffdb55':'#c3ff54',12);for(let j=0;j<3;j++){const m=mesh(new T.OctahedronGeometry(.16),'#ffc944',e.g.position.x+(rand()-.5),.4,e.g.position.z+(rand()-.5));loot.push({m,life:1.5});}e.alive=false;e.dying=.3;e.respawn=e.boss?35:9;}
+    function collect(e,consumed=false){const gold=cb.kill(e.boss,e.camp.kind);pop('+'+gold+' \u25c6',e.g.position.x,2.2,e.g.position.z,'#ffe46b');particles(e.g.position.x,e.g.position.z,e.boss?'#ffdb55':'#c3ff54',12);for(let j=0;j<3;j++){const m=mesh(new T.OctahedronGeometry(.16),'#ffc944',e.g.position.x+(rand()-.5),.4,e.g.position.z+(rand()-.5));loot.push({m,life:1.5});}e.alive=false;e.dying=consumed?0:.3;e.respawn=e.boss?35:9;if(consumed)e.g.visible=false;if(!notifiedCamps.has(e.camp.index)&&enemies.filter(v=>v.camp===e.camp).every(v=>!v.alive)){notifiedCamps.add(e.camp.index);cb.camp?.(e.camp.index);}}
     let target=null,keys={},joy={x:0,y:0},manualTarget=null,now=0;
     function setKeys(e,down){if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){keys[k]=down;e.preventDefault();}}
     window.addEventListener('keydown',e=>setKeys(e,true));window.addEventListener('keyup',e=>setKeys(e,false));window.addEventListener('blur',()=>{keys={};joy={x:0,y:0};});
@@ -60,18 +62,23 @@
     canvas.addEventListener('pointerdown',e=>{if(paused)return;const r=canvas.getBoundingClientRect();ray.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);if(ray.ray.intersectPlane(plane,intersection)){manualTarget={x:T.MathUtils.clamp(intersection.x,-20.5,20.5),z:T.MathUtils.clamp(intersection.z,-27,21)};lastManual=time;}});
     function resize(){invalidate();const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(canvas);resize();
     function tick(dt){time+=dt;const pos=hero.position;
-      target=enemies.filter(e=>e.alive).sort((a,b)=>a.g.position.distanceToSquared(pos)-b.g.position.distanceToSquared(pos))[0];
+      target=enemies.filter(e=>e.alive&&!e.captured).sort((a,b)=>a.g.position.distanceToSquared(pos)-b.g.position.distanceToSquared(pos))[0];
       let sx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x,sy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;
-      let dx=sx,dz=sy;
-      if(Math.abs(dx)+Math.abs(dz)>.05){manualTarget=null;lastManual=time;}else if(manualTarget){dx=manualTarget.x-pos.x;dz=manualTarget.z-pos.z;if(Math.hypot(dx,dz)<.3)manualTarget=null;}
-      else if(auto&&target&&time-lastManual>2.5&&target.g.position.distanceTo(pos)>settings.range*.8){dx=target.g.position.x-pos.x;dz=target.g.position.z-pos.z;}
-      const moving=Math.hypot(dx,dz)>.1;if(moving){const len=Math.hypot(dx,dz);pos.x+=dx/len*settings.speed*dt;pos.z+=dz/len*settings.speed*dt;facing=Math.atan2(dx,dz);pos.x=T.MathUtils.clamp(pos.x,-20.5,20.5);pos.z=T.MathUtils.clamp(pos.z,-27,21);}
+      let dx=sx,dz=sy,steeringTarget=null;
+      if(Math.abs(dx)+Math.abs(dz)>.05){manualTarget=null;lastManual=time;}else if(manualTarget){steeringTarget=manualTarget;dx=manualTarget.x-pos.x;dz=manualTarget.z-pos.z;if(Math.hypot(dx,dz)<.3)manualTarget=null;}
+      else if(auto&&target&&time-lastManual>2.5&&target.g.position.distanceTo(pos)>settings.range*.8){steeringTarget=target;dx=target.x-pos.x;dz=target.z-pos.z;}
+      if(steeringTarget){const direction=HeroMovement.steer(pos,steeringTarget,colliders);dx=direction.x;dz=direction.z;}
+      const moving=Math.hypot(dx,dz)>.1;if(moving){const len=Math.hypot(dx,dz);const moved=HeroMovement.move(pos,dx/len*settings.speed*dt,dz/len*settings.speed*dt,colliders);pos.x=moved.x;pos.z=moved.z;facing=Math.atan2(dx,dz);pos.x=T.MathUtils.clamp(pos.x,-20.5,20.5);pos.z=T.MathUtils.clamp(pos.z,-27,21);}
       pos.y=pos.z<snowEdge(pos.x)?.59:.05;
       heroModel.update(time,dt,moving,facing,!!target&&target.g.position.distanceTo(pos)<settings.range);
+      if(auto&&time-lastManual>2.5)HeroHook.start(hookState,pos,enemies);
+      const hookEvents=HeroHook.step(hookState,dt,pos,enemies);
+      for(const event of hookEvents){const e=enemies.find(v=>v.id===event.id);cb.consume?.(e.boss);particles(pos.x,pos.z,'#bcff75',18);pop('CONSUMED',pos.x,4,pos.z,'#caff85');collect(e,true);}
+      hookModel.update(hookState,pos,time);
       poseCooldown=Math.max(0,poseCooldown-dt);
       const actor={x:pos.x,z:pos.z,hp,maxHp:settings.hp,regen:settings.regen,range:settings.range};
       const events=HeroCombat.step(combat,dt,actor,enemies,settings.arsenal||[{id:'axe',dps:settings.damage}]);hp=actor.hp;
-      for(const e of enemies){e.g.position.x=e.x;e.g.position.z=e.z;}
+      for(const e of enemies){if(e.alive&&!e.captured){const moved=HeroMovement.move(e.g.position,e.x-e.g.position.x,e.z-e.g.position.z,colliders,e.boss?.9:.45);e.x=moved.x;e.z=moved.z;}e.g.position.x=e.x;e.g.position.z=e.z;}
       for(const event of events){
         const e=enemies.find(e=>e.id===event.id),profile=HeroCombat.PROFILES[event.weapon];
         cb.combat?.(event);
@@ -83,7 +90,7 @@
         }else if(event.type==='death')collect(e);
         else if(event.type==='heroHit'){pop('-'+event.amount,pos.x,4,pos.z,'#ff8d8d');particles(pos.x,pos.z,'#ff8579',4);}
         else if(event.type==='strike')combatFx.impact(event.x,event.z,event.boss?'#ff604a':'#ffce6b',event.radius);
-        else if(event.type==='defeat'){pos.set(0,.25,3);hp=settings.hp;combat=HeroCombat.create(combat.seed);cb.revive();}
+        else if(event.type==='defeat'){pos.set(0,.25,3);hp=settings.hp;combat=HeroCombat.create(combat.seed);cancelHook();cb.revive();}
       }
       enemies.forEach(e=>{
         if(!e.alive){
@@ -92,16 +99,20 @@
         }
         e.flash=Math.max(0,e.flash-dt);const dist=e.g.position.distanceTo(pos),s=e.combat;
         const movingEnemy=dist<9&&dist>2.15&&s?.state==='approach'&&!s.statuses.stun;
-        e.g.position.y=e.z<snowEdge(e.x)?.59:.05;const angle=Math.atan2(pos.x-e.x,pos.z-e.z);
-        e.model.update(time+e.phase,dt,movingEnemy,angle,e.flash,0,s?.state,s?.statuses);
+        e.g.position.y=(e.z<snowEdge(e.x)?.59:.05)+(e.captureLift||0);const angle=Math.atan2(pos.x-e.x,pos.z-e.z);
+        e.model.update(time+e.phase,dt,movingEnemy&&!e.captured,angle,e.flash,0,e.captured?false:s?.state,s?.statuses);if(e.captured)e.g.scale.setScalar(Math.max(.01,e.captureScale));
       });
       combatFx.update(dt,enemies);
       loot.forEach(l=>{l.life-=dt;l.m.rotation.y+=dt*4;l.m.position.lerp(pos,.025);l.m.position.y=.5+Math.sin(l.life*4)*.25;});for(let i=loot.length-1;i>=0;i--)if(loot[i].life<=0){scene.remove(loot[i].m);loot[i].m.geometry.dispose();loot.splice(i,1);}
       floats.forEach(f=>{f.life-=dt;f.y+=dt*.9;});for(let i=floats.length-1;i>=0;i--)if(floats[i].life<=0)floats.splice(i,1);
       camps.forEach(c=>c.ring.rotation.z=time*.2);environment.update(time,dt,hero.position);sun.position.x=pos.x-16;sun.position.z=pos.z+15;sun.target.position.copy(pos);sun.target.updateMatrixWorld();
     }
-    let last=performance.now(),hudClock=0;function frame(stamp){requestAnimationFrame(frame);const dt=Math.max(0,Math.min(.05,(stamp-last)/1000));last=stamp;if(!paused)tick(dt);const pos=hero.position;if(paused&&renderOnce){pos.y=pos.z<snowEdge(pos.x)?.59:.05;heroModel.update(time,0,false,facing,false);environment.update(time,0,pos);focus.copy(pos);}focus.lerp(new T.Vector3(pos.x,0,pos.z),1-Math.exp(-dt*7));const aspect=canvas.clientWidth/canvas.clientHeight,halfHeight=(aspect<.8?13.1:12.5)*zoom;camera.left=-halfHeight*aspect;camera.right=halfHeight*aspect;camera.top=halfHeight;camera.bottom=-halfHeight;camera.updateProjectionMatrix();camera.position.set(focus.x,32,focus.z+22);camera.lookAt(focus.x,0,focus.z-1.5);if(!paused||renderOnce){renderer.render(scene,camera);renderOnce=false;}hudClock+=dt;if((hudClock>.065&&!paused)||hudOnce){hudClock=0;hudOnce=false;cb.frame({hp,maxHp:settings.hp,position:{x:pos.x,z:pos.z},hero:project(pos.x,5.2,pos.z),floats:floats.map(f=>({...f,...project(f.x,f.y,f.z)})),enemies:enemies.filter(e=>e.alive&&e.hp<e.max).map(e=>({...project(e.g.position.x,e.boss?3:2.6,e.g.position.z),ratio:e.hp/e.max})),camps:camps.map(c=>({...project(c.x,2,c.z),name:c.name,index:c.index,alive:enemies.filter(e=>e.camp===c&&e.alive).length,respawn:Math.max(0,...enemies.filter(e=>e.camp===c&&!e.alive).map(e=>e.respawn))}))});}}
+    function cancelHook(){HeroHook.cancel(hookState,enemies);hookModel.update(hookState,hero.position,time);}
+    function nearbyNode(){return resourceNodes.filter(n=>!claimedNodes.has(n.id)&&Math.hypot(n.x-hero.position.x,n.z-hero.position.z)<2.8).sort((a,b)=>Math.hypot(a.x-hero.position.x,a.z-hero.position.z)-Math.hypot(b.x-hero.position.x,b.z-hero.position.z))[0]||null;}
+    function setProgress(progress){claimedNodes=new Set(progress.claimedNodes||[]);for(const node of resourceNodes){const prop=environment.objects.find(p=>p.kind===node.kind&&Math.hypot(p.x-node.x,p.z-node.z)<.1);if(prop)prop.root.visible=!claimedNodes.has(node.id);}colliders=environment.getColliders().filter(c=>environment.objects.find(p=>p.id===c.id).root.visible);invalidate();}
+    function interact(){if(paused)return false;const node=nearbyNode();if(!node)return false;const reward=cb.gather?.(node.id);if(!reward)return false;claimedNodes.add(node.id);setProgress({claimedNodes:[...claimedNodes]});particles(node.x,node.z,'#f8e47c',18);pop(node.label,node.x,2,node.z,'#ffe78c');return true;}
+    let last=performance.now(),hudClock=0;function frame(stamp){requestAnimationFrame(frame);const dt=Math.max(0,Math.min(.05,(stamp-last)/1000));last=stamp;if(!paused)tick(dt);const pos=hero.position;if(paused&&renderOnce){pos.y=pos.z<snowEdge(pos.x)?.59:.05;heroModel.update(time,0,false,facing,false);environment.update(time,0,pos);focus.copy(pos);}focus.lerp(new T.Vector3(pos.x,0,pos.z),1-Math.exp(-dt*7));const aspect=canvas.clientWidth/canvas.clientHeight,halfHeight=(aspect<.8?13.1:12.5)*zoom;camera.left=-halfHeight*aspect;camera.right=halfHeight*aspect;camera.top=halfHeight;camera.bottom=-halfHeight;camera.updateProjectionMatrix();camera.position.set(focus.x,32,focus.z+22);camera.lookAt(focus.x,0,focus.z-1.5);if(!paused||renderOnce){renderer.render(scene,camera);renderOnce=false;}hudClock+=dt;if((hudClock>.065&&!paused)||hudOnce){hudClock=0;hudOnce=false;cb.frame({hook:{phase:hookState.phase,cooldown:hookState.cooldown,ready:enemies.some(e=>HeroHook.eligible(pos,e))},node:nearbyNode(),cooldowns:{...combat.cooldowns},hp,maxHp:settings.hp,position:{x:pos.x,z:pos.z},hero:project(pos.x,5.2,pos.z),floats:floats.map(f=>({...f,...project(f.x,f.y,f.z)})),enemies:enemies.filter(e=>e.alive&&e.hp<e.max).map(e=>({...project(e.g.position.x,e.boss?3:2.6,e.g.position.z),ratio:e.hp/e.max})),camps:camps.map(c=>({...project(c.x,2,c.z),name:c.name,index:c.index,alive:enemies.filter(e=>e.camp===c&&e.alive).length,respawn:Math.max(0,...enemies.filter(e=>e.camp===c&&!e.alive).map(e=>e.respawn))}))});}}
     requestAnimationFrame(frame);
-    return {setStats(s){const old=settings.hp;settings=s;hp=Math.min(s.hp,hp+(s.hp-old));invalidate();},setWeapons:weapons,setAuto(v){auto=v;},pause(v){if(paused!==v)invalidate();paused=v;keys={};joy={x:0,y:0};},joystick(x,y){joy={x,y};},position(p){hero.position.set(p.x,.25,p.z);focus.copy(hero.position);invalidate();},zone(i){const points=[[0,4],[-3,-19],[12,-14]];hero.position.set(points[i][0],.25,points[i][1]);manualTarget=null;lastManual=time;invalidate();},zoom(){zoom=zoom===1?.78:zoom===.78?1.25:1;invalidate();},heal(){hp=settings.hp;invalidate();},getPosition(){return {x:hero.position.x,z:hero.position.z};},getColliders(){return environment.getColliders();}};
+    return {setProgress,interact,hook(){if(paused)return false;const fired=HeroHook.start(hookState,hero.position,enemies);if(fired)invalidate();return fired;},setStats(s){const old=settings.hp;settings=s;hp=Math.min(s.hp,hp+(s.hp-old));invalidate();},setWeapons:weapons,setAuto(v){auto=v;},pause(v){if(paused!==v)invalidate();paused=v;keys={};joy={x:0,y:0};},joystick(x,y){joy={x,y};},position(p){cancelHook();hero.position.set(p.x,.25,p.z);focus.copy(hero.position);invalidate();},zone(i){cancelHook();const points=[[0,4],[-3,-19],[12,-14]];hero.position.set(points[i][0],.25,points[i][1]);manualTarget=null;lastManual=time;invalidate();},zoom(){zoom=zoom===1?.78:zoom===.78?1.25:1;invalidate();},heal(){hp=settings.hp;invalidate();},getPosition(){return {x:hero.position.x,z:hero.position.z};},getColliders(){return environment.getColliders();}};
   };
 })();

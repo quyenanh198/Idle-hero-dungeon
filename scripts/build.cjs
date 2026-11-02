@@ -7,11 +7,11 @@ const root = path.resolve(__dirname, '..');
 const output = path.join(root, 'dist');
 const { version } = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const files = [
-  'index.html', 'styles.css', 'core.js', 'combat.js', 'combat-fx.js', 'world.js', 'game.js',
+  'index.html', 'styles.css', 'core.js', 'hook.js', 'movement.js', 'combat.js', 'combat-fx.js', 'world.js', 'game.js',
   'assets/art/weapons-v5.png', 'motion.js', 'characters.js', 'art-assets.js', 'sprite-motion.js', 'art-renderer.js', 'environment.js', 'assets/art/ui-v4.png', 'reference.css', 'server.cjs', 'Play.cmd', 'vendor/three.min.js', 'vendor/THREE-LICENSE.txt', 'vendor/lilita-one.ttf', 'vendor/LILITA-LICENSE.txt'
 ];
 
-for (const file of ['core.js', 'combat.js', 'combat-fx.js', 'world.js', 'game.js', 'motion.js', 'characters.js', 'sprite-motion.js', 'art-renderer.js', 'environment.js', 'server.cjs']) {
+for (const file of ['core.js', 'hook.js', 'movement.js', 'combat.js', 'combat-fx.js', 'world.js', 'game.js', 'motion.js', 'characters.js', 'sprite-motion.js', 'art-renderer.js', 'environment.js', 'server.cjs']) {
   const result = spawnSync(process.execPath, ['--check', path.join(root, file)], { stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status || 1);
 }
