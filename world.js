@@ -4,7 +4,7 @@
   window.createWorld=function(canvas,cb){
     const T=THREE,scene=new T.Scene();scene.background=new T.Color('#3e7c39');scene.fog=new T.Fog('#52814b',70,110);
     const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.setClearColor('#3e7c39');renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
-    const camera=new T.OrthographicCamera(-20,20,15,-15,.1,160);const focus=new T.Vector3();let renderOnce=true,hudOnce=true;function invalidate(){renderOnce=true;hudOnce=true;}let zoom=1,paused=false,auto=true,time=0,attackTime=0,hitTime=0,lastManual=-10,hp=400,settings={damage:60,hp:400,regen:4.5,speed:4,range:3};
+    const camera=new T.OrthographicCamera(-20,20,15,-15,.1,160);const focus=new T.Vector3();let renderOnce=true,hudOnce=true;function invalidate(){renderOnce=true;hudOnce=true;}let zoom=1,paused=false,auto=true,time=0,poseCooldown=0,lastManual=-10,hp=400,settings={damage:60,hp:400,regen:4.5,speed:4,range:3};
     const hemi=new T.HemisphereLight(0xe1edff,0x566447,1.7);scene.add(hemi);
     const sun=new T.DirectionalLight(0xfff1d8,2.2);sun.position.set(-16,32,15);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-33,right:33,top:33,bottom:-33,near:1,far:95});sun.shadow.bias=-.0007;sun.shadow.normalBias=.03;scene.add(sun);
     const mats={};function mat(c){return mats[c]||(mats[c]=new T.MeshStandardMaterial({color:c,roughness:1,flatShading:true}));}
@@ -46,12 +46,12 @@
     const camps=campData.map((c,i)=>{const ring=mesh(new T.TorusGeometry(1.4,.14,6,32),'#6dff9c',c.x,.3,c.z);ring.rotation.x=-Math.PI/2;const outer=mesh(new T.RingGeometry(1.65,1.78,32),'#d0ffba',c.x,.23,c.z);outer.rotation.x=-Math.PI/2;outer.castShadow=false;ring.visible=false;outer.visible=false;return {...c,ring,index:i};});
     const heroModel=HeroModels.champion(),hero=heroModel.root,body=heroModel.body;scene.add(hero);hero.position.set(0,.05,3);let facing=Math.PI;
     function weapons(ids){heroModel.setWeapons(ids);invalidate();}
-    const enemies=[],effects=[],floats=[],loot=[];const hitMaterial=new T.MeshStandardMaterial({color:'#ffffff',roughness:1,flatShading:true});
-    function spawn(camp,boss=false){const a=rand()*Math.PI*2,r=boss?0:2+rand()*2.3;const model=HeroModels.creature(camp.kind,boss),g=model.root,torso=model.torso;g.position.set(camp.x+Math.cos(a)*r,.05,camp.z+Math.sin(a)*r);scene.add(g);const max=boss?2400:180+camp.kind*140;const e={g,model,torso,original:torso.material,hp:max,max,camp,boss,phase:rand()*6.28,flash:0,alive:true,respawn:0,dying:0};enemies.push(e);return e;}
+    const enemies=[],floats=[],loot=[];let combat=HeroCombat.create();const combatFx=CombatFX.create(scene,(x,z)=>z<snowEdge(x)?.59:.05);
+    function spawn(camp,boss=false){const a=rand()*Math.PI*2,r=boss?0:2+rand()*2.3;const model=HeroModels.creature(camp.kind,boss),g=model.root,torso=model.torso;g.position.set(camp.x+Math.cos(a)*r,.05,camp.z+Math.sin(a)*r);scene.add(g);const max=boss?2400:180+camp.kind*140;const e={id:enemies.length,x:g.position.x,z:g.position.z,kind:camp.kind,g,model,torso,hp:max,max,camp,boss,phase:rand()*6.28,flash:0,alive:true,respawn:0,dying:0};enemies.push(e);return e;}
     camps.forEach((c,i)=>{for(let j=0;j<(i===3?1:5);j++)spawn(c,i===3);});
     const tmpV=new T.Vector3();function project(x,y,z){tmpV.set(x,y,z).project(camera);return {x:(tmpV.x*.5+.5)*canvas.clientWidth,y:(-tmpV.y*.5+.5)*canvas.clientHeight,visible:tmpV.z<1&&Math.abs(tmpV.x)<1.1&&Math.abs(tmpV.y)<1.1};}
     function pop(text,x,y,z,color='#fff9b0'){floats.push({text,x,y,z,color,life:1.3,max:1.3});}
-    function particles(x,z,color,n=8){for(let i=0;i<n;i++){const m=ball(.09+rand()*.08,color,x,.7,z);m.castShadow=false;effects.push({m,vx:(rand()-.5)*4,vy:2+rand()*3,vz:(rand()-.5)*4,life:.6});}}
+    function particles(x,z,color,n=8){combatFx.burst(x,z,color,n);}
     function collect(e){const gold=cb.kill(e.boss,e.camp.kind);pop('+'+gold+' \u25c6',e.g.position.x,2.2,e.g.position.z,'#ffe46b');particles(e.g.position.x,e.g.position.z,e.boss?'#ffdb55':'#c3ff54',12);for(let j=0;j<3;j++){const m=mesh(new T.OctahedronGeometry(.16),'#ffc944',e.g.position.x+(rand()-.5),.4,e.g.position.z+(rand()-.5));loot.push({m,life:1.5});}e.alive=false;e.dying=.3;e.respawn=e.boss?35:9;}
     let target=null,keys={},joy={x:0,y:0},manualTarget=null,now=0;
     function setKeys(e,down){if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){keys[k]=down;e.preventDefault();}}
@@ -68,18 +68,34 @@
       const moving=Math.hypot(dx,dz)>.1;if(moving){const len=Math.hypot(dx,dz);pos.x+=dx/len*settings.speed*dt;pos.z+=dz/len*settings.speed*dt;facing=Math.atan2(dx,dz);pos.x=T.MathUtils.clamp(pos.x,-20.5,20.5);pos.z=T.MathUtils.clamp(pos.z,-27,21);}
       pos.y=pos.z<snowEdge(pos.x)?.59:.05;
       heroModel.update(time,dt,moving,facing,!!target&&target.g.position.distanceTo(pos)<settings.range);
-      attackTime-=dt;hitTime-=dt;
-      if(target&&attackTime<=0&&target.g.position.distanceTo(pos)<settings.range){attackTime=.55;heroModel.strike();const dmg=Math.round(settings.damage*.55*(Math.random()<.12?2:1));const victims=enemies.filter(e=>e.alive&&e.g.position.distanceTo(pos)<settings.range);victims.forEach(e=>{e.hp-=dmg;e.flash=.12;e.torso.material=hitMaterial;pop(''+dmg,e.g.position.x,1.8,e.g.position.z,dmg>settings.damage?'#ffdf49':'#fff');particles(e.g.position.x,e.g.position.z,'#f1f4cc',3);if(e.hp<=0)collect(e);});cb.hit?.();
-        const arc=mesh(new T.TorusGeometry(1.8,.07,3,16,Math.PI*1.4),'#fff3ab',pos.x,1,pos.z);arc.rotation.x=Math.PI/2;effects.push({m:arc,vx:0,vy:0,vz:0,life:.15});}
+      poseCooldown=Math.max(0,poseCooldown-dt);
+      const actor={x:pos.x,z:pos.z,hp,maxHp:settings.hp,regen:settings.regen,range:settings.range};
+      const events=HeroCombat.step(combat,dt,actor,enemies,settings.arsenal||[{id:'axe',dps:settings.damage}]);hp=actor.hp;
+      for(const e of enemies){e.g.position.x=e.x;e.g.position.z=e.z;}
+      for(const event of events){
+        const e=enemies.find(e=>e.id===event.id),profile=HeroCombat.PROFILES[event.weapon];
+        cb.combat?.(event);
+        if(event.type==='weapon'){
+          if(poseCooldown<=0){heroModel.strike();poseCooldown=.54;}
+          combatFx.impact(event.x,event.z,profile.color,event.effect==='cleave'||event.effect==='burn'?1.5:.8);cb.hit?.(event.weapon);
+        }else if(event.type==='damage'){
+          e.flash=.14;pop(''+event.amount,event.x,1.8,event.z,event.critical?'#ffe66a':profile?.color||'#fff');particles(event.x,event.z,profile?.color||'#fff',3);
+        }else if(event.type==='death')collect(e);
+        else if(event.type==='heroHit'){pop('-'+event.amount,pos.x,4,pos.z,'#ff8d8d');particles(pos.x,pos.z,'#ff8579',4);}
+        else if(event.type==='strike')combatFx.impact(event.x,event.z,event.boss?'#ff604a':'#ffce6b',event.radius);
+        else if(event.type==='defeat'){pos.set(0,.25,3);hp=settings.hp;combat=HeroCombat.create(combat.seed);cb.revive();}
+      }
       enemies.forEach(e=>{
-        if(!e.alive){e.respawn-=dt;if(e.dying>0){e.dying=Math.max(0,e.dying-dt);e.model.update(time+e.phase,dt,false,0,0,e.dying);if(e.dying<=0)e.g.visible=false;}if(e.respawn<=0){e.hp=e.max;e.alive=true;e.g.visible=true;e.g.scale.setScalar(1);e.g.position.set(e.camp.x+(rand()-.5)*5,.05,e.camp.z+(rand()-.5)*5);}return;}
-        e.flash-=dt;if(e.flash<=0)e.torso.material=e.original;const dist=e.g.position.distanceTo(pos),movingEnemy=dist<8&&dist>1.9;e.g.position.y=e.g.position.z<snowEdge(e.g.position.x)?.59:.05;const angle=Math.atan2(pos.x-e.g.position.x,pos.z-e.g.position.z);
-        if(movingEnemy){const speed=e.boss?1.3:1.15;e.g.position.x+=(pos.x-e.g.position.x)/dist*speed*dt;e.g.position.z+=(pos.z-e.g.position.z)/dist*speed*dt;}
-        e.model.update(time+e.phase,dt,movingEnemy,angle,e.flash,0,dist<2.5);
-        if(dist<2.2&&hitTime<=0){hp-=e.boss?55:9+e.camp.kind*4;hitTime=.8;pop('-'+(e.boss?55:9+e.camp.kind*4),pos.x,4,pos.z,'#ff8d8d');particles(pos.x,pos.z,'#ff8579',4);}
+        if(!e.alive){
+          e.respawn-=dt;if(e.dying>0){e.dying=Math.max(0,e.dying-dt);e.model.update(time+e.phase,dt,false,0,0,e.dying);if(e.dying<=0)e.g.visible=false;}
+          if(e.respawn<=0){HeroCombat.resetEnemy(e,e.camp.x+(rand()-.5)*5,e.camp.z+(rand()-.5)*5);e.g.visible=true;e.g.scale.setScalar(1);e.g.position.set(e.x,.05,e.z);}return;
+        }
+        e.flash=Math.max(0,e.flash-dt);const dist=e.g.position.distanceTo(pos),s=e.combat;
+        const movingEnemy=dist<9&&dist>2.15&&s?.state==='approach'&&!s.statuses.stun;
+        e.g.position.y=e.z<snowEdge(e.x)?.59:.05;const angle=Math.atan2(pos.x-e.x,pos.z-e.z);
+        e.model.update(time+e.phase,dt,movingEnemy,angle,e.flash,0,s?.state,s?.statuses);
       });
-      hp=Math.min(settings.hp,hp+settings.regen*dt);if(hp<=0){pos.set(0,.25,3);hp=settings.hp;cb.revive();}
-      effects.forEach(e=>{e.life-=dt;e.m.position.x+=e.vx*dt;e.m.position.y+=e.vy*dt;e.m.position.z+=e.vz*dt;e.vy-=8*dt;e.m.scale.multiplyScalar(.97);});for(let i=effects.length-1;i>=0;i--)if(effects[i].life<=0){scene.remove(effects[i].m);effects[i].m.geometry.dispose();effects.splice(i,1);}
+      combatFx.update(dt,enemies);
       loot.forEach(l=>{l.life-=dt;l.m.rotation.y+=dt*4;l.m.position.lerp(pos,.025);l.m.position.y=.5+Math.sin(l.life*4)*.25;});for(let i=loot.length-1;i>=0;i--)if(loot[i].life<=0){scene.remove(loot[i].m);loot[i].m.geometry.dispose();loot.splice(i,1);}
       floats.forEach(f=>{f.life-=dt;f.y+=dt*.9;});for(let i=floats.length-1;i>=0;i--)if(floats[i].life<=0)floats.splice(i,1);
       camps.forEach(c=>c.ring.rotation.z=time*.2);environment.update(time,dt,hero.position);sun.position.x=pos.x-16;sun.position.z=pos.z+15;sun.target.position.copy(pos);sun.target.updateMatrixWorld();

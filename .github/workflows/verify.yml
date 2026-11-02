@@ -27,6 +27,7 @@ jobs:
       - run: npm run test:browser
       - run: npm run test:art
       - run: npm run test:environment
+      - run: npm run test:combat
       - run: npm run test:world-render
       - uses: actions/upload-artifact@v4
         if: always()
