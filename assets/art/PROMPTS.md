@@ -1,0 +1,35 @@
+# Visual v3 art generation
+
+Generated with the built-in `image_gen` tool, using the supplied gameplay frames as visual references. These are new raster assets, not extracted original models. Alpha transparency is preserved; no image processing was used to repaint these outputs.
+
+## Final assets
+
+- `champion-v3.png`: 8 columns × 4 rows; 32 views/poses. Rows: idle, left step, passing pose, right step. Columns: down, down-left, left, up-left, up, up-right, right, down-right.
+- `weapons-v3.png`: 3 columns × 2 rows; iron cleaver, purple reaver, green star, stone hatchet, flame axe, frost reaper. `anchors.json` contains handle-pommel attachment coordinates measured from alpha bounds.
+- `enemies-v3.png`: 4 columns × 3 rows; idle/left step/right step/attack for horned imp, crystal golem and armored crab.
+
+## Champion prompt
+
+Production-ready transparent game sprite animation atlas, exactly 8 equal columns and 4 equal rows, 32 isolated sprites, regular cell alignment, same scale and baseline. No labels, borders, weapons, chains, health bars, UI, ground, scenery or ground shadow. Match the elevated 55-degree camera in the supplied hero/gameplay references.
+
+Enormous hunched orange butcher with broad muscular shoulders and hanging forearms, short dark green trousered legs, heavy dark boots, orange/gold skin, rusty red-orange back panel with visible dark stitched seams and metal staples. Tiny head low between shoulders, round brown leather-and-iron cap with steel rim and short pale ivory side horns, gruff small face, leather harness and iron attachment rings. No barrel/wooden-plank hat, beard, moustache, weapon or shield. Polished mobile RPG 3D pre-rendered art, sculpted anatomy, smooth shaded planes, restrained faceting, detailed leather and metal, warm top-left light and cool fill, clean edges. Consistent identity across directions and actual changes to legs/arm poses.
+
+Column order: down/front; down-left; left profile; up-left; up/back; up-right; right profile; down-right. Row order: planted idle; left-foot-forward stride; passing pose; right-foot-forward stride. Keep equal cell margins, full figure, genuine transparency.
+
+## Weapon prompt
+
+Final transparent 3×2 full-weapon atlas. Same scale and regular cells, generous padding, handles downward, no attached chains, no character, labels, UI, pedestals, floor or shadows. Match the supplied weapon screenshot colors and silhouettes. Premium stylized 3D materials, bevelled metal, crisp dark contours, warm top-left light, elevated 55-degree three-quarter camera.
+
+Row 1: worn grey iron cleaver, curved pale silver edge, wood handle/rivets/black grip; jagged purple crescent reaver with rear spines, round indentations, pale lilac edge and red leather handle; three-pronged neon green star blade on grey socket with pale lime edges and black haft.
+
+Row 2: primitive short stone hatchet with brown/grey socket, ivory chipped crescent edge and two rivets; orange/red flame axe with rear flame fins, cream cutting edge and red grip; indigo hooked frost reaper with blue icy teeth, periwinkle edge, violet inset eye and navy handle. No bow/crossbow substitutes.
+
+## Enemy prompt
+
+Final transparent 4×3 enemy animation atlas matching the champion rendering style and supplied monster reference. Elevated 55-degree camera, warm key/cool fill, consistent down-left facing, same baseline/scale per row. No floor, ground shadows, labels or UI.
+
+Row 1: small stocky brown imp, oversized head, pointed ears, short ivory horns, angry eyes, large nose, toothy grin, leather loincloth/belt, dark boots and worn iron hand axe. Row 2: dark teal frost golem, glowing eyes, brilliant cyan shoulder/chest crystals, dark navy forearms/lower legs, chunky hands/feet. Row 3: armored lava crab, rusty crimson segmented shell, gold spikes, purple/brown pincers, six legs and yellow eyes. Columns: planted idle, left stride, right stride, attack lunge/raised weapon or claws. Keep identity and proportions consistent.
+
+## Runtime use
+
+`scripts/compile-art.cjs` embeds PNG data URLs for WebGL to support offline direct-file launch. UI uses the same weapon PNG. `art-renderer.js` samples the atlases; turning blends adjacent directions and movement loops actual walk poses. `characters.js` supplies live instanced steel chains, trails and projected weapon shadows. The prior procedural units are preserved under `backups/visual-v2/`.

@@ -1,0 +1,17 @@
+{
+  "name": "idle-hero-dungeon",
+  "version": "1.2.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "start": "node server.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "node tests/browser.cjs",
+    "check": "node --check game.js && node --check world.js && node --check core.js && node --check characters.js && node --check motion.js && node --check sprite-motion.js && node --check art-renderer.js",
+    "record:visual": "node tests/record-visual.cjs",
+    "test:art": "node tests/art.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}

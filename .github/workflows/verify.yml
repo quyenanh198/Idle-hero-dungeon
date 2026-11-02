@@ -1,0 +1,40 @@
+name: Verify game
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  game:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - name: Start local preview
+        run: |
+          node server.cjs > server.log 2>&1 &
+          node -e "(async()=>{for(let i=0;i<40;i++){try{const r=await fetch('http://localhost:4177');if(r.ok)return;}catch{}await new Promise(r=>setTimeout(r,250));}process.exit(1);})()"
+      - run: npm run test:browser
+      - run: npm run test:art
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: game-verification
+          path: |
+            qa/*.png
+            server.log
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: idle-hero-dungeon-local
+          path: dist/
