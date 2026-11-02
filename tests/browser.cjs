@@ -10,7 +10,7 @@ const base='http://localhost:4177';
  const check=(value,message)=>{assert.ok(value,message);checks++;console.log('PASS',message);};
  const errors=[];const remote=[];const out=path.resolve(__dirname,'../qa');fs.mkdirSync(out,{recursive:true});
  const page=await browser.newPage({viewport:{width:1440,height:1000}});
- page.setDefaultTimeout(12000);page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(!r.url().startsWith(base)&&!r.url().startsWith('data:'))remote.push(r.url());});
+ page.setDefaultTimeout(12000);page.on('pageerror',e=>errors.push(e.stack||e.message));page.on('request',r=>{if(!r.url().startsWith(base)&&!r.url().startsWith('data:'))remote.push(r.url());});
  await page.goto(base);await page.waitForFunction(()=>document.getElementById('loading').hidden);await page.waitForTimeout(1300);
  check(await page.locator('#world').evaluate(e=>e.clientWidth>=1400),'desktop uses full-screen reference canvas');
  await page.screenshot({path:path.join(out,'desktop.png')});
@@ -43,6 +43,6 @@ const base='http://localhost:4177';
  }
  check(errors.length===0,'no browser errors: '+errors.join('; '));check(remote.length===0,'no external runtime requests');
  // File launch is an advertised entry point, so validate it too.
- const direct=await browser.newPage();direct.on('pageerror',e=>errors.push(e.message));await direct.goto('file:///'+path.resolve(__dirname,'../index.html').replaceAll('\\','/'));await direct.waitForFunction(()=>document.getElementById('loading').hidden);check(await direct.locator('#world').isVisible(),'direct index.html launch works');check(errors.length===0,'direct launch has no errors');
+ const direct=await browser.newPage();direct.on('pageerror',e=>errors.push(e.stack||e.message));await direct.goto('file:///'+path.resolve(__dirname,'../index.html').replaceAll('\\','/'));await direct.waitForFunction(()=>document.getElementById('loading').hidden);check(await direct.locator('#world').isVisible(),'direct index.html launch works');check(errors.length===0,'direct launch has no errors');
  await browser.close();console.log(`Browser QA: ${checks} checks passed; desktop/mobile screenshots in qa/; zero page errors or remote requests.`);
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -6,6 +6,8 @@ for(const [name,spec]of Object.entries(specs)){
  art[name]={columns:spec.columns,rows:spec.rows,width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20),data:'data:image/png;base64,'+bytes.toString('base64')};
 }
 art.environment.frames=JSON.parse(fs.readFileSync(path.join(root,'assets/art/environment-v4.frames.json'),'utf8')).frames;
+art.champion.frames=JSON.parse(fs.readFileSync(path.join(root,'assets/art/champion-v5.frames.json'),'utf8'));
+art.championAttack.frames=JSON.parse(fs.readFileSync(path.join(root,'assets/art/champion-attack-v5.frames.json'),'utf8'));
 art.weapons.anchors=JSON.parse(fs.readFileSync(path.join(root,'assets/art/anchors-v5.json'),'utf8'));
 fs.writeFileSync(path.join(root,'art-assets.js'),'/* Bundled raster art: data URLs preserve direct-file offline play. */\nwindow.HeroArt='+JSON.stringify(art)+';\n');
 console.log('Bundled champion, weapon and enemy atlases for offline play.');

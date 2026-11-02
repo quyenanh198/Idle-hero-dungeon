@@ -5,3 +5,6 @@ test('atlas rectangles use top-left row order without bleeding into neighbours',
 test('attacks play windup, release, follow-through and recovery once then return to locomotion',()=>{
  assert.equal(S.attackRow(0),0);assert.equal(S.attackRow(.15),1);assert.equal(S.attackRow(.28),2);assert.equal(S.attackRow(.4),3);assert.equal(S.attackRow(.53),-1);
 });
+test('an early first animation timestamp still selects a valid stride frame',()=>{
+ assert.equal(S.walkRow(-.01,true),1);
+});
