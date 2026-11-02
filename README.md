@@ -39,6 +39,8 @@ npx playwright install chromium
 # Run npm start in another terminal first:
 npm run test:browser
 npm run test:art
+npm run test:environment
+npm run test:world-render
 ```
 
 The GitHub workflow runs source checks, unit tests, a build, browser flows and artwork/resource checks, then uploads screenshots and the local build as artifacts.
@@ -46,6 +48,7 @@ The GitHub workflow runs source checks, unit tests, a build, browser flows and a
 ## Art and inspection
 
 - `qa/asset-review.html`: live close-up champion and weapon animation viewer.
+- `qa/environment-review.html`: all sixteen measured props and their live motion.
 - `assets/art/`: original generated PNG atlases, pommel anchors and prompt specifications.
 - `scripts/compile-art.cjs`: embeds textures as data URLs for direct-file WebGL compatibility.
 - `scripts/build.cjs`: assembles and hashes the offline distributable.
@@ -54,3 +57,7 @@ The GitHub workflow runs source checks, unit tests, a build, browser flows and a
 The champion has eight views and four idle/walk poses; six weapon heads and three animated enemy species share the rendered style. These assets were generated with the built-in ImageGen tool. They are reconstructed art, not original game meshes or animation clips.
 
 Reference recordings, extracted phone screenshots, local saves, old backups and generated QA media are intentionally excluded from the repository. Source PNGs are retained. Three.js and Lilita One licenses are included in `vendor/`. The game makes no remote requests while playing.
+
+## Living-world art (v1.3.0)
+
+The remaining trees, rocks, houses, market supplies, portal and resource props now use rendered sprites consistent with the champion. Foliage sways and fades when it blocks the hero; stone stays still and runed props pulse subtly. Portrait, inventory, shop, skull, gems and skill icons share a rendered HUD sheet. Pausing or opening a menu stops repeated 3D draws.
