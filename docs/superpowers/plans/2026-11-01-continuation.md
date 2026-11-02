@@ -22,7 +22,7 @@
 - [x] Generate a coherent transparent environment atlas: forest/snow trees, rocks, barrel/crate, market/tent, portal, crystal and chest.
 - [x] Replace remaining coarse cone/box props with anchored rendered sprites, retaining spatial shadows and correct front/back occlusion.
 - [x] Add idle environmental motion and a review gallery; inspect desktop/mobile screenshots and asset boundaries.
-- [ ] Verify art load/resource behavior and gameplay regressions, review, PR and merge.
+- [x] Verify art load/resource behavior and gameplay regressions, review, PR and merge. PR #2 CI run 41405958455 passed; merged as 71ae2a43debb0e582548ffd692d3c9b860d18c8b.
 
 ## Step 2 — Combat animation and enemy behavior
 
@@ -45,3 +45,10 @@
 - [ ] Confirm all implementation steps are merged on remote main with passing CI.
 - [ ] Build from the resulting main, verify runtime asset hashes and direct-file launch, refresh the local ZIP.
 - [ ] Inspect actual desktop/mobile gameplay and a recorded end-to-end session. Report limitations accurately; do not equate functional tests with exact visual fidelity.
+
+## Additional user feedback: champion/arsenal v5
+
+- [x] Cleaner locomotion art, dedicated 32-frame attack sheet, rebuilt six-weapon atlas and measured pommels.
+- [x] Remove directional ghosting; implement attack stages and outward oriented, individually varied weapon paths with spacing checks.
+- [x] Local checks and independent review pass.
+- [ ] Publish and merge focused visual revision after CI; then continue the combat/gameplay steps above.

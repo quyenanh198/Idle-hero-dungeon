@@ -3,6 +3,7 @@ qa/test-save.json
 *.log
 dist/
 Idle hero dungeon-local.zip
+Idle hero dungeon-v*.zip
 backups/
 docs/reference/
 qa/*.png
