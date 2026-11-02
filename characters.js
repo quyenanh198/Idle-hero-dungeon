@@ -28,9 +28,9 @@
       const root=new T.Group(),body=new T.Object3D(),torso={material:metal};
       root.name=boss?'rendered-lava-crab':kind===2?'rendered-crystal-golem':'rendered-horned-imp';
       const painted=HeroSprites.creature(root,kind,boss);
-      function update(time,dt,moving,angle,hurt,dying,attacking=false){
+      function update(time,dt,moving,angle,hurt,dying,attacking=false,statuses={}){
         body.rotation.y=M.turnTowards(body.rotation.y,angle,dt);
-        painted.update(time,moving,angle,hurt,dying,attacking);
+        painted.update(time,moving,angle,hurt,dying,attacking,statuses);
         if(dying>0)root.scale.setScalar(Math.max(.05,dying/.3));else root.scale.setScalar(1);
       }
       return {root,body,torso,update};

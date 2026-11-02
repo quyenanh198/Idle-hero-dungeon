@@ -1,12 +1,12 @@
 (function(root){
   'use strict';
   const WEAPONS=[
-    {id:'axe',name:'Iron Cleaver',icon:'axe',color:'#ffb631',base:36,cost:60,desc:'A heavy blade. A very bad day for slimes.'},
-    {id:'blade',name:'Venom Reaver',icon:'blade',color:'#b46aff',base:24,cost:90,desc:'An orbiting blade forged in the void.'},
-    {id:'bow',name:'Emerald Star',icon:'bow',color:'#9bea59',base:28,cost:120,desc:'Ancient wood. Unerring aim.'},
-    {id:'hammer',name:'Stone Hatchet',icon:'hammer',color:'#b6d3e0',base:45,cost:180,desc:'Crack armor and shake the earth.'},
-    {id:'staff',name:'Flame Axe',icon:'staff',color:'#ff7653',base:38,cost:240,desc:'A little fire goes a long way.'},
-    {id:'crossbow',name:'Frost Reaper',icon:'crossbow',color:'#55dfff',base:52,cost:320,desc:'Thunder, conveniently pocket-sized.'}
+    {id:'axe',name:'Iron Cleaver',icon:'axe',color:'#ffb631',base:36,cost:60,desc:'Wide cleaves hit clustered enemies.'},
+    {id:'blade',name:'Venom Reaver',icon:'blade',color:'#b46aff',base:24,cost:90,desc:'Poisons enemies for 3 seconds.'},
+    {id:'bow',name:'Emerald Star',icon:'bow',color:'#9bea59',base:28,cost:120,desc:'Strikes two foes and fractures armor.'},
+    {id:'hammer',name:'Stone Hatchet',icon:'hammer',color:'#b6d3e0',base:45,cost:180,desc:'Stuns and interrupts ordinary enemies.'},
+    {id:'staff',name:'Flame Axe',icon:'staff',color:'#ff7653',base:38,cost:240,desc:'Splash damage leaves enemies burning.'},
+    {id:'crossbow',name:'Frost Reaper',icon:'crossbow',color:'#55dfff',base:52,cost:320,desc:'Chills enemies, slowing their approach.'}
   ];
   const SKILLS=[
     {id:'strength',name:'Strong arm',icon:'axe',cost:15,parent:null,desc:'+20% damage',x:50,y:88},
@@ -22,7 +22,7 @@
     {id:'hero',name:'Dungeon legend',icon:'crown',cost:150,parent:'iron',desc:'+100% damage',x:50,y:9}
   ];
   function createState(){return {version:1,gold:480,gems:35,souls:18,kills:0,bosses:0,level:1,xp:0,chests:0,questClaim:0,zone:0,visualVersion:2,weapons:{axe:1,blade:1,bow:1,hammer:1,staff:1,crossbow:1},equipped:['axe','blade','bow','hammer','staff','crossbow'],skills:[],position:{x:0,z:3},auto:true,sound:false,savedAt:Date.now()};}
-  function stats(s){let damage=WEAPONS.reduce((a,w)=>a+(s.equipped.includes(w.id)?w.base*(s.weapons[w.id]||0):0),0);const has=id=>s.skills.includes(id);damage*=1+(has('strength')?.2:0)+(has('fury')?.25:0)+(has('inferno')?.6:0)+(has('hero')?1:0);return {damage:Math.round(damage*(1+(s.level-1)*.08)),hp:Math.round((360+s.level*40)*(1+(has('vitality')?.3:0)+(has('iron')?.5:0))),regen:has('regen')?9:4.5,speed:has('haste')?5.2:4,range:has('reach')?5.2:4.1,goldBonus:1+(has('greed')?.4:0)+(has('fortune')?.75:0)};}
+  function stats(s){let damage=WEAPONS.reduce((a,w)=>a+(s.equipped.includes(w.id)?w.base*(s.weapons[w.id]||0):0),0);const has=id=>s.skills.includes(id);damage*=1+(has('strength')?.2:0)+(has('fury')?.25:0)+(has('inferno')?.6:0)+(has('hero')?1:0);const totalDamage=Math.round(damage*(1+(s.level-1)*.08));const weight=WEAPONS.reduce((n,w)=>n+(s.equipped.includes(w.id)?w.base*(s.weapons[w.id]||0):0),0);return {arsenal:WEAPONS.filter(w=>s.equipped.includes(w.id)).map(w=>({id:w.id,dps:weight?totalDamage*w.base*(s.weapons[w.id]||0)/weight:0})),damage:totalDamage,hp:Math.round((360+s.level*40)*(1+(has('vitality')?.3:0)+(has('iron')?.5:0))),regen:has('regen')?9:4.5,speed:has('haste')?5.2:4,range:has('reach')?5.2:4.1,goldBonus:1+(has('greed')?.4:0)+(has('fortune')?.75:0)};}
   function weaponCost(s,id){const w=WEAPONS.find(w=>w.id===id);return w?Math.round(w.cost*Math.pow(1.48,s.weapons[id]||0)):Infinity;}
   function upgradeWeapon(s,id){const w=WEAPONS.find(w=>w.id===id);if(!w)return false;const cost=weaponCost(s,id);if(s.gold<cost||s.weapons[id]>=100)return false;s.gold-=cost;s.weapons[id]++;if(!s.equipped.includes(id)&&s.equipped.length<6)s.equipped.push(id);return true;}
   function unlockSkill(s,id){const skill=SKILLS.find(k=>k.id===id);if(!skill||s.skills.includes(id)||s.souls<skill.cost||(skill.parent&&!s.skills.includes(skill.parent)))return false;s.souls-=skill.cost;s.skills.push(id);return true;}

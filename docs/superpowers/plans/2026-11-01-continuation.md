@@ -26,10 +26,10 @@
 
 ## Step 2 — Combat animation and enemy behavior
 
-- [ ] Extract combat math/state from `world.js` into a deterministic module with tests for cooldowns, damage/status effects, deaths and reward-once behavior.
-- [ ] Give the six weapons distinct slash, poison, blunt, fire and frost behavior and matching impact/trail effects.
-- [ ] Replace shared enemy hit timing with individual windup/attack/recovery states. Add dodgeable boss telegraphs and a low-health phase.
-- [ ] Integrate bounded particles, recoil, clear damage feedback and responsive synthesized SFX; verify live browser combat and pause/resume.
+- [x] Extract combat math/state from `world.js` into a deterministic module with tests for cooldowns, damage/status effects, deaths and reward-once behavior.
+- [x] Give the six weapons distinct slash, poison, blunt, fire and frost behavior and matching impact/trail effects.
+- [x] Replace shared enemy hit timing with individual windup/attack/recovery states. Add dodgeable boss telegraphs and a low-health phase.
+- [x] Integrate bounded particles, recoil, clear damage feedback and responsive synthesized SFX; verify live browser combat and pause/resume.
 - [ ] Review, PR and merge.
 
 ## Step 3 — Hook, consume and progression loop
@@ -51,4 +51,4 @@
 - [x] Cleaner locomotion art, dedicated 32-frame attack sheet, rebuilt six-weapon atlas and measured pommels.
 - [x] Remove directional ghosting; implement attack stages and outward oriented, individually varied weapon paths with spacing checks.
 - [x] Local checks and independent review pass.
-- [ ] Publish and merge focused visual revision after CI; then continue the combat/gameplay steps above.
+- [x] Publish and merge focused visual revision after CI. PR #3 CI 41409684831 passed; merged as 6b17e347a224e607b4e45d5f831c268aa22428fa. Continue the combat/gameplay steps above.
