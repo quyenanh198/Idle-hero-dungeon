@@ -13,15 +13,15 @@
 
 ## Step 0 — Publish the playable baseline
 
-- [ ] Import runtime, generated assets, tests and reproducible pinned browser dependencies.
-- [ ] Add CI for syntax, unit tests, local build, browser flows and art/resource checks; exclude reference media/backups.
-- [ ] Verify locally, review the source, open a PR and merge after CI passes.
+- [x] Import runtime, generated assets, tests and reproducible pinned browser dependencies.
+- [x] Add CI for syntax, unit tests, local build, browser flows and art/resource checks; exclude reference media/backups.
+- [x] Verify locally, review the source, open a PR and merge after CI passes. PR #1 merged as `b79f38507ce092c20f0626d78399ce62b4c4f25a`; CI run 41403059094 passed.
 
 ## Step 1 — Complete environment and utility art
 
-- [ ] Generate a coherent transparent environment atlas: forest/snow trees, rocks, barrel/crate, market/tent, portal, crystal and chest.
-- [ ] Replace remaining coarse cone/box props with anchored rendered sprites, retaining spatial shadows and correct front/back occlusion.
-- [ ] Add idle environmental motion and a review gallery; inspect desktop/mobile screenshots and asset boundaries.
+- [x] Generate a coherent transparent environment atlas: forest/snow trees, rocks, barrel/crate, market/tent, portal, crystal and chest.
+- [x] Replace remaining coarse cone/box props with anchored rendered sprites, retaining spatial shadows and correct front/back occlusion.
+- [x] Add idle environmental motion and a review gallery; inspect desktop/mobile screenshots and asset boundaries.
 - [ ] Verify art load/resource behavior and gameplay regressions, review, PR and merge.
 
 ## Step 2 — Combat animation and enemy behavior

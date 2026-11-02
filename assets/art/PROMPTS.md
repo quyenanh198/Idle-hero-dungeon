@@ -33,3 +33,13 @@ Row 1: small stocky brown imp, oversized head, pointed ears, short ivory horns, 
 ## Runtime use
 
 `scripts/compile-art.cjs` embeds PNG data URLs for WebGL to support offline direct-file launch. UI uses the same weapon PNG. `art-renderer.js` samples the atlases; turning blends adjacent directions and movement loops actual walk poses. `characters.js` supplies live instanced steel chains, trails and projected weapon shadows. The prior procedural units are preserved under `backups/visual-v2/`.
+
+## Environment and HUD continuation (v1.3.0)
+
+Built-in ImageGen generated `environment-v4.png` and `ui-v4.png`, using the existing champion, weapons and supplied game frames as visual references. Original PNGs are retained unchanged.
+
+Environment prompt: final transparent 4x4 prop atlas, premium stylized 3D pre-rendered mobile RPG look, elevated 55-degree camera, warm upper-left light/cool fill, sculpted readable materials, centered full objects, no text, panels, ground or shadows. Row-major subjects: forest spruce; broad leafy tree; snowy blue-teal spruce; orange-roof stone/timber cottage; mossy boulder; snowy icy rock; oak/iron barrel; stacked supply crates; orange-striped timber market stall; covered supply wagon; violet runed stone portal; cyan crystal cluster with red mineral base; gold-banded treasure chest; purple-orb stone totem; rooted cut stump; wooden fence. Actual object regions and root pivots are measured in `environment-v4.frames.json` because generated row heights are not perfectly uniform. `scripts/measure-environment-art.py` reads alpha only and does not modify the PNG.
+
+HUD prompt: final transparent 4x2 premium RPG utility icon atlas, coherent with the champion/weapon art, centered and readable at 40px, clean dark contour, no text or background. Row-major subjects: bronze-rimmed orange champion portrait; steel chained butcher hook; three blue gems; horned ivory skull; green-awning shop; orange leather backpack/gold buckle; green regeneration heart/plus; purple soul-orb stone ring.
+
+Environment layout correction: a second built-in ImageGen edit preserved the sixteen prop identities but repacked them into a square 4x4 sheet, with each object occupying at most 60% of its cell and at least 20% transparent margins. This removed overlapping crop rectangles and detached neighboring fragments. The initial tightly packed output is retained only in local ignored backups. The final original output PNG is measured without repainting or pixel edits; the non-overlap invariant is tested.

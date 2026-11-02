@@ -9,7 +9,25 @@
     const m=new T.Mesh(new T.PlaneGeometry(width,depth),new T.MeshBasicMaterial({map:shared.shadow,transparent:true,opacity,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));m.rotation.x=-Math.PI/2;m.position.y=.025;parent.add(m);return m;
   }
   window.HeroSprites={
-    ready(){return Promise.all(['champion','weapons','enemies'].map(name=>{const map=texture(name);return map.image.decode().then(()=>{map.needsUpdate=true;map.userData.ready=true;});}));},
+    ready(){return Promise.all(['champion','weapons','enemies','environment'].map(name=>{const map=texture(name);return map.image.decode().then(()=>{map.needsUpdate=true;map.userData.ready=true;});}));},
+    prop(kind,parent,scale=1){
+      const spec=WorldEnvironment.CATALOG[kind],art=HeroArt.environment,frame=art.frames[kind];
+      const map=texture('environment').clone(),rect=WorldEnvironment.frameUv(kind,art);
+      map.repeat.set(rect.w,rect.h);map.offset.set(rect.x,rect.y);map.minFilter=map.magFilter=T.LinearFilter;map.generateMipmaps=false;map.needsUpdate=true;
+      const material=new T.SpriteMaterial({map,transparent:true,alphaTest:.09,depthWrite:true,depthTest:true,toneMapped:false});
+      const sprite=new T.Sprite(material),height=spec.height*scale,width=height*frame.w/frame.h;
+      sprite.name='rendered-prop-'+kind;sprite.center.set(frame.pivot[0],frame.pivot[1]);sprite.position.y=.035;sprite.scale.set(width,height,1);parent.add(sprite);
+      const shadow=softShadow(parent,spec.shadow[0]*scale,spec.shadow[1]*scale,.42);shadow.position.x=.12*scale;shadow.position.z=.07*scale;
+      let ready=false,opacity=1;
+      function update(time,dt,targetOpacity=1){
+        if(!ready&&texture('environment').userData.ready){ready=true;map.needsUpdate=true;}sprite.visible=shadow.visible=ready;
+        const pose=WorldEnvironment.motion(kind,time,parent.position.x+parent.position.z*.7);
+        material.rotation=pose.rotation;sprite.scale.set(width*pose.scale,height*pose.scale,1);material.color.setScalar(pose.glow);
+        opacity+=(targetOpacity-opacity)*(1-Math.exp(-dt*6));material.opacity=opacity;material.depthWrite=opacity>.95;
+      }
+      function dispose(){parent.remove(sprite,shadow);map.dispose();material.dispose();shadow.geometry.dispose();shadow.material.dispose();}
+      return {sprite,shadow,update,dispose};
+    },
     champion(parent){
       const map=atlas('champion',0,0),mat=new T.SpriteMaterial({map,transparent:true,alphaTest:.06,depthWrite:true,depthTest:true,toneMapped:false});const sprite=new T.Sprite(mat);sprite.name='painted-champion';sprite.renderOrder=3;sprite.center.set(.5,.06);sprite.position.y=.08;const spec=HeroArt.champion,aspect=(spec.width/spec.columns)/(spec.height/spec.rows);sprite.scale.set(5.1*aspect,5.1,1);parent.add(sprite);const shadow=softShadow(parent,3.65,2.55,.68);const blendUniforms={uFaceBlend:{value:0},uFrameDelta:{value:new T.Vector2()}};mat.onBeforeCompile=shader=>{Object.assign(shader.uniforms,blendUniforms);shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform float uFaceBlend;\nuniform vec2 uFrameDelta;').replace('#include <map_fragment>','#ifdef USE_MAP\nvec4 a=texture2D(map,vMapUv);vec4 b=texture2D(map,vMapUv+uFrameDelta);diffuseColor*=mix(a,b,uFaceBlend);\n#endif');};mat.customProgramCacheKey=()=> 'champion-direction-blend-v3';let column=-1,row=-1,lastFrame=-1;
       function update(time,moving,facing,combat,kick=0){
