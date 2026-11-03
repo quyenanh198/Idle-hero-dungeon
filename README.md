@@ -1,5 +1,7 @@
 # Idle Hero Dungeon
 
+**Release: v1.0.0**
+
 A local desktop/mobile webapp inspired by the supplied gameplay recording. Rendered champion, weapon and enemy art runs over a Three.js world, with live chains, automatic combat, upgrades, skills, bounties and local saves.
 
 ## Play locally

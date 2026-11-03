@@ -12,7 +12,7 @@ const {chromium}=require('@playwright/test');const fs=require('node:fs');const C
   `}));
   await page.goto('http://localhost:4177/');await page.waitForFunction(()=>document.getElementById('loading').hidden);
   await page.waitForFunction(()=>qaConsumes>0&&qaCampRewards>0,{},{timeout:90000});console.log('PASS fresh auto battle consumes enemies and completes a camp');
-  await page.locator('.world-right [data-action=inventory]').click();await page.locator('[data-upgrade=axe]').click();await page.locator('#modal-close').click();
+  await page.locator('.world-right [data-action=inventory]').click();await page.locator('.gold-button[data-upgrade=axe]').click();await page.locator('#modal-close').click();
   await page.locator('.world-right [data-action=skills]').click();await page.locator('[data-skill=strength]').click();await page.locator('[data-unlock-skill=strength]').click();await page.locator('#modal-close').click();
   await page.locator('.reference-profile [data-action=map]').click();await page.locator('[data-travel="1"]').click();await page.waitForFunction(()=>document.getElementById('zone-name').textContent==='Frost Hollow');
   await page.locator('.reference-profile [data-action=map]').click();await page.locator('[data-travel="2"]').click();
