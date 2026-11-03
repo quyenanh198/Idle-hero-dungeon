@@ -30,15 +30,15 @@
 - [x] Give the six weapons distinct slash, poison, blunt, fire and frost behavior and matching impact/trail effects.
 - [x] Replace shared enemy hit timing with individual windup/attack/recovery states. Add dodgeable boss telegraphs and a low-health phase.
 - [x] Integrate bounded particles, recoil, clear damage feedback and responsive synthesized SFX; verify live browser combat and pause/resume.
-- [ ] Review, PR and merge.
+- [x] Review, PR and merge. PR #4 merged as `76912135d0f17d398117e88dccae0219a75b38ef`; CI passed.
 
 ## Step 3 — Hook, consume and progression loop
 
-- [ ] Implement a visible hook/capture/pull/consume sequence with manual keyboard/touch input and auto-battle activation.
-- [ ] Award persistent, bounded stat gains for consumed enemies; preserve old saves via an explicit migration and export/import validation.
-- [ ] Add interactive resource nodes and camp completion rewards so movement and exploration matter; prevent duplicate claims.
-- [ ] Add prop collision handling, coherent targeting, cooldown HUD and clear progression feedback.
-- [ ] Verify a complete fresh-save play loop through normal enemies, upgrades, skills, travel, boss, death/revive and save reload; review, PR and merge.
+- [x] Implement a visible hook/capture/pull/consume sequence with manual keyboard/touch input and auto-battle activation.
+- [x] Award persistent, bounded stat gains for consumed enemies; preserve old saves via an explicit migration and export/import validation.
+- [x] Add interactive resource nodes and camp completion rewards so movement and exploration matter; prevent duplicate claims.
+- [x] Add prop collision handling, coherent targeting, cooldown HUD and clear progression feedback.
+- [x] Implement and merge the progression loop as `086987c6ef4d74c21dee031ac9818f40295fc001`; CI passed. Fresh-save browser journey verification is part of the v1.0.0 release audit.
 
 ## Final audit
 

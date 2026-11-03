@@ -8,7 +8,7 @@ permissions:
 jobs:
   game:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,6 +29,8 @@ jobs:
       - run: npm run test:environment
       - run: npm run test:combat
       - run: npm run test:world-render
+      - run: node tests/progression-browser.cjs
+      - run: node tests/journey.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
