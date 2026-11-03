@@ -38,7 +38,7 @@
 - [x] Award persistent, bounded stat gains for consumed enemies; preserve old saves via an explicit migration and export/import validation.
 - [x] Add interactive resource nodes and camp completion rewards so movement and exploration matter; prevent duplicate claims.
 - [x] Add prop collision handling, coherent targeting, cooldown HUD and clear progression feedback.
-- [x] Implement and merge the progression loop in PR #5 as `086987c6ef4d74c21dee031ac9818f40295fc001`; CI passed. Fresh-save browser journey verification is part of the v1.0.0 release audit.
+- [x] Implement and merge the progression loop as `086987c6ef4d74c21dee031ac9818f40295fc001`; CI passed. Fresh-save browser journey verification is part of the v1.0.0 release audit.
 
 ## Final audit
 
